@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 80%;">
+    <h1 class="text-center mb-4">Registered Users for {{ event.name }}</h1>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="thead-light">
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Registration Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event_registration in registered_users %}
+                <tr>
+                    <td>{{ event_registration.user.username }}</td>
+                    <td>{{ event_registration.user.email }}</td>
+                    <td>{{ event_registration.registration_date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    /* Additional custom styles */
+    h1 {
+        font-size: 2rem;
+        color: #343a40;
+    }
+    .table {
+        margin-top: 20px;
+    }
+    .table th, .table td {
+        vertical-align: middle;
+    }
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}

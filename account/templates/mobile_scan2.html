@@ -1,0 +1,403 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}  
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mobile Scan - {{ event.name }}</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quagga/dist/quagga.min.js"></script>
+    <style>
+      body {
+        background-image: url("/media/background_images/runner.jpeg");
+        background-repeat: no-repeat;
+        background-size: cover;
+        min-height: 100vh;
+        overflow: hidden;
+        position: relative;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0); 
+        z-index: -1;
+      }
+
+      @media only screen and (max-width: 768px) {
+        body {
+          background-size: cover;
+          background-repeat: repeat;
+        }
+      }
+
+      #scanner-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 35%;
+        height: 65%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid transparent;
+        border-radius: 1px;
+        box-shadow: 0 0 2px 1px #bbbbbb;
+      }
+
+      #cameraCanvas {
+        position: absolute;
+        top: 4%;
+        width: 90%;
+        height: 80%;
+        border: 1px solid transparent;
+        border-radius: 5px ;
+      }
+
+      #camera-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+      }
+
+      #stop-scanning-btn{
+        position: absolute;
+        bottom: 5%;
+        text-transform: uppercase;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      .stop{
+        text-decoration: none;
+      }
+
+      .hide{
+        display: none; 
+      }
+
+      .dark-grey{
+        background-color: #c4c4c4;
+      }
+
+      .popup {
+        visibility: hidden;
+        max-width: 80%;
+        margin: auto;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 2px;
+        padding: 16px;
+        position: fixed;
+        z-index: 1;
+        left: 50%;
+        bottom: 30px;
+        font-size: 17px;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: opacity 0.5s, visibility 0.5s;
+      }
+
+      .popup.show {
+        visibility: visible;
+        opacity: 1;
+      }
+
+      @media only screen and (max-width: 768px) {
+        #scanner-container {
+          width: 70%;
+        }
+      }
+
+      @media only screen and (max-width: 480px) {
+        #scanner-container {
+          width: 90%;
+        }
+      }
+
+      #event-info {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+
+      #start-race-btn, #stop-event-btn {
+        position: absolute;
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      #start-race-btn {
+        bottom: -70px;
+        left: 50%;
+        transform: translateX(-110%);
+      }
+
+      #stop-event-btn {
+        bottom: -70px;
+        left: 50%;
+        transform: translateX(10%);
+        background-color: #f44336;
+      }
+    </style>
+</head>
+<body>
+    <br>
+     <b>Event: {{ event.name }}</b>
+    <div id="scanner-container">
+       
+        <canvas id="cameraCanvas" class="stop"></canvas>
+        <input id="stop-scanning-btn" type="submit" value="Stop scanning">
+        <canvas class="hide" id="camera-overlay"></canvas>
+   
+        <button id="stop-event-btn">Stop Event</button>
+    </div>
+    <div class="popup" id="popup"></div>
+    <div class="prompts" style="display: flex; align-items: center; justify-content: center;">
+        <div id="messagePopup" style="color: green;font-size: 20px;padding :10px;font-weight: bolder;"></div>
+        <div id="timeTaken" style="color: green;font-size: 20px;padding :10px;font-weight: bolder;"></div>
+        <div id="errorPopup" style="color: rgb(172, 15, 15);font-size: 20px;padding :10px;font-weight: bolder;"></div>
+    </div>
+    <script>
+        $(document).ready(function () {
+            var canvas = document.getElementById('cameraCanvas');
+            var context = canvas.getContext('2d');
+            var scanning = false;
+            var eventStopped = false;
+
+            function drawVideoFrame(video, context, width, height) {
+                context.drawImage(video, 0, 0, width, height);
+                requestAnimationFrame(() => drawVideoFrame(video, context, width, height));
+            }
+
+            function showPopup(popupId, message, duration = 3000) {
+                var popup = document.getElementById(popupId);
+                popup.textContent = message;
+                popup.classList.add('show');
+                setTimeout(function () {
+                    popup.classList.remove('show');
+                }, duration);
+            }
+
+            function startScanning() {
+                Quagga.start();
+                scanning = true;
+                showScanningEffect();
+                document.getElementById('stop-scanning-btn').value = 'Stop scanning';
+                document.getElementById('camera-overlay').classList.remove('stop');
+                document.getElementById('cameraCanvas').classList.remove('hide');
+            }
+
+            function stopScanning() {
+                scanning = false;
+                document.getElementById('stop-scanning-btn').value = 'Start scanning';
+                document.getElementById('camera-overlay').classList.add('stop');
+                document.getElementById('cameraCanvas').classList.add('hide');
+            }
+
+            function toggleScanning() {
+                if (scanning) {
+                    stopScanning();
+                } else {
+                    startScanning();
+                }
+            }
+
+            function showScanningEffect() {
+                var overlayCanvas = document.getElementById('camera-overlay');
+                var overlayContext = overlayCanvas.getContext('2d');
+                overlayContext.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+                
+                var gradient = overlayContext.createLinearGradient(0, 0, overlayCanvas.width, 0);
+                gradient.addColorStop("0", "transparent");
+                gradient.addColorStop("0.5", "rgba(255, 255, 255, 0.5)");
+                gradient.addColorStop("1.0", "transparent");
+                
+                var scanSpeed = 5;
+                
+                var scanPosition = 0;
+                function animateScan() {
+                    overlayContext.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+                    overlayContext.fillStyle = gradient;
+                    overlayContext.fillRect(scanPosition, 0, scanSpeed, overlayCanvas.height);
+                    scanPosition += scanSpeed;
+                    if (scanPosition < overlayCanvas.width) {
+                        requestAnimationFrame(animateScan);
+                    }
+                }
+                
+                animateScan();
+            }
+
+            function isMobileDevice() {
+                return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            }
+
+            function getVideoConstraints() {
+                if (isMobileDevice()) {
+                    return { facingMode: { exact: "environment" } }; 
+                } else {
+                    return { facingMode: "user" }; 
+                }
+            }
+
+            function startRace() {
+                $.ajax({
+                    url: window.location.href,
+                    type: 'POST',
+                    data: {
+                        csrfmiddlewaretoken: $("[name=csrfmiddlewaretoken]").val(),
+                        action: 'start_race'
+                    },
+                    success: function (response) {
+                        if (response.message) {
+                            showPopup('popup', response.message, 3000);
+                            $('#start-race-btn').prop('disabled', true);
+                        }
+                    },
+                    error: function (error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
+
+            function stopEvent() {
+                $.ajax({
+                    url: '{% url "stop_event" %}',  // Make sure to set the correct URL name for your stop_event view
+                    type: 'POST',
+                    data: {
+                        csrfmiddlewaretoken: $("[name=csrfmiddlewaretoken]").val(),
+                        event_id: {{ event.id }}
+                    },
+                    success: function (response) {
+                        if (response.message) {
+                            showPopup('popup', response.message, 3000);
+                            $('#stop-event-btn').prop('disabled', true);
+                            eventStopped = true;
+                            stopScanning();
+                        }
+                    },
+                    error: function (error) {
+                        console.error('Error:', error);
+                        if (error.responseJSON && error.responseJSON.error) {
+                            showPopup('popup', error.responseJSON.error, 3000);
+                        }
+                    }
+                });
+            }
+
+            $('#start-race-btn').on('click', startRace);
+            $('#stop-event-btn').on('click', stopEvent);
+
+            navigator.mediaDevices.getUserMedia({ video: getVideoConstraints() })
+                .then(function (stream) {
+                    const video = document.createElement('video');
+                    video.srcObject = stream;
+                    video.play();
+
+                    video.addEventListener('play', function () {
+                        drawVideoFrame(video, context, canvas.width, canvas.height);
+                    });
+                })
+                .catch(function (err) {
+                    console.error('An error occurred: ' + err);
+                });
+
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    constraints: getVideoConstraints(),
+                    target: canvas, 
+                },
+                decoder: {
+                    readers: ["code_39_reader"],
+                },
+            }, function (err) {
+                if (err) {
+                    console.error("Error initializing Quagga:", err);
+                    return;
+                }
+                Quagga.start();
+
+                Quagga.onDetected(function (result) {
+                    if (eventStopped) {
+                        showPopup('popup', 'Event has been stopped. No more scans allowed.', 3000);
+                        return;
+                    }
+
+                    var barcodeValue = result.codeResult.code;
+                    showPopup('popup', 'Barcode detected: ' + barcodeValue, 3000);
+
+                    $.ajax({
+                        url: window.location.href,
+                        type: 'POST',
+                        data: {
+                            csrfmiddlewaretoken: $("[name=csrfmiddlewaretoken]").val(),
+                            action: 'scan_barcode',
+                            barcode_value: barcodeValue,
+                            event_id: {{ event.id }}
+                        },
+                        success: function (response) {
+                            console.log('Success:', response);
+                            function showAndHideMessage(elementId, message) {
+                                const element = document.getElementById(elementId);
+                                element.textContent = message;
+                                element.classList.add('show');
+                                element.classList.add('dark-grey');
+                                setTimeout(() => {
+                                    element.classList.remove('dark-grey');
+                                    element.classList.remove('show');
+                                    element.textContent = '';
+                                }, 5000);
+                            }
+                            if (response.message) {
+                                showAndHideMessage('messagePopup', response.message);
+                            }
+                            if (response.time_taken) {
+                                showAndHideMessage('timeTaken', response.time_taken);
+                            }
+                            if (response.error) {
+                                showAndHideMessage('errorPopup', response.error);
+                            }
+                        },
+                        error: function (error) {
+                            console.error('Error:', error);
+                        }
+                    });
+                    showScanningEffect();
+                });
+                document.getElementById('stop-scanning-btn').addEventListener('click', toggleScanning);
+            });
+        });
+    </script>
+</body>
+</html>
+
+{% endblock %}

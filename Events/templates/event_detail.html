@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="card shadow-lg border-0 rounded-lg">
+        
+            <h2 class="card-title mb-0">{{ event.name }}</h2>
+      
+        <div class="card-body">
+            <p class="card-text">{{ event.description }}</p>
+            <div class="d-flex flex-wrap justify-content-between mb-3">
+                <a href="{% url 'camera_scan_barcode2' event.id %}" class="btn btn-success btn-rounded mb-2" data-mdb-ripple-init>Start Event</a>
+                <a href="{% url 'camera_scan_barcode' event.id %}" class="btn btn-info btn-rounded mb-2" data-mdb-ripple-init>Scan Users</a>
+                <a href="{% url 'view_registered_users' event.id %}" class="btn btn-secondary btn-rounded mb-2" data-mdb-ripple-init>View Participants</a>
+                <a href="{% url 'event_results' event.id %}" class="btn btn-warning btn-rounded mb-2" data-mdb-ripple-init>View Results</a>
+            </div>
+
+            
+
+    </div>
+
+</div>
+
+<style>
+    /* Custom styles for a more professional look */
+    .card {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        border-bottom: 2px solid #007bff;
+    }
+
+    .card-body p {
+        font-size: 1.2rem;
+    }
+
+    .btn-group .btn, 
+    .d-flex .btn {
+        border-radius: 50px;
+        font-size: 1rem;
+        padding: 0.75rem 1.5rem;
+    }
+
+    .d-flex .btn + .btn {
+        margin-left: 15px;
+    }
+
+    .d-flex.flex-wrap .btn {
+        flex: 1 1 auto;
+        min-width: calc(50% - 15px); /* Ensure buttons take up full width on smaller screens */
+    }
+
+    .list-group-item {
+        background-color: #ffffff;
+    }
+
+    .list-group-item + .list-group-item {
+        margin-top: 10px;
+    }
+
+    .badge {
+        font-size: 1rem;
+        padding: 0.6rem 1rem;
+    }
+</style>
+
+{% endblock %}
+
+{% block scripts %}
+<!-- Include MDB UI Kit JavaScript -->
+<script type="module">
+    // Import necessary components
+    import { Ripple, initMDB } from 'https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.0.0/mdb.min.js';
+
+    // Initialize MDB Ripple effect
+    initMDB({ Ripple });
+</script>
+{% endblock %}

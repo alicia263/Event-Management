@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Select Event{% endblock %}
+
+{% block content %}
+<!-- templates/select_event.html -->
+<h2>Select an Event</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Select Event</button>
+</form>
+
+{% endblock %}

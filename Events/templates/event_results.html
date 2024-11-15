@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Event Results{% endblock %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 80%;">
+    <h1 class="text-center mb-4">Results for {{ event.name }}</h1>
+    
+    {% if results %}
+    <!-- Email Button -->
+    <div class="text-right mb-3">
+        <form method="post" action="#">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary rounded-pill" style="background-color: #4e73df; border-color: #4e73df;">
+                <i class="fas fa-envelope"></i> Send Results
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
+    <div class="table-responsive">
+        {% if results %}
+            <table class="table table-bordered table-hover">
+                <thead class="thead-light">
+                    <tr>
+                        <th>#</th>  <!-- Added column for numbering -->
+                        <th>Username</th>
+                        <th>Scan Time</th>
+                        <th>Time Taken (seconds)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>  <!-- Added numbering for each row -->
+                        <td>{{ result.user.username }}</td>
+                        <td>{{ result.scan_time }}</td>
+                        <td>{{ result.time_taken }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-center">No results available for this event.</p>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    /* Additional custom styles */
+    h1 {
+        font-size: 2rem;
+        color: #343a40;
+    }
+    .table {
+        margin-top: 20px;
+    }
+    .table th, .table td {
+        vertical-align: middle;
+    }
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}

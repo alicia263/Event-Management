@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card mx-auto" id="profile-card" style="width: 400px;">
+        <div class="card-header text-center bg-success text-white">
+            My Profile Details
+        </div>
+        <div class="card-body text-center">
+            <div class="qr-code-container mx-auto my-4">
+                <img class="qr-code" src="{{ qr_code_url }}" alt="QR Code">
+            </div>
+            <div class="student-info text-left">
+                <p><span class="info-label font-weight-bold">Name:</span> {{ user.first_name }}</p>
+                <p><span class="info-label font-weight-bold">Race:</span> OCR</p>
+                <p><span class="info-label font-weight-bold">Year:</span> 2024</p>
+            </div>
+            <button class="btn btn-secondary mt-3" onclick="window.print()">Print</button>
+            <button class="btn btn-primary mt-3" id="download-pdf">Download PDF</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #f5f5f5;
+    }
+    .card {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .qr-code-container {
+        width: 360px; /* 3 times bigger width */
+        height: 360px; /* 3 times bigger height */
+        border: 12px solid #1cdf78; /* Adjusted border thickness */
+        border-radius: 30px; /* Adjusted border radius */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .qr-code {
+        width: 300px; /* 3 times bigger QR code size */
+        height: 300px; /* 3 times bigger QR code size */
+        object-fit: contain;
+    }
+    .student-info p {
+        font-size: 1.1rem;
+        margin: 8px 0;
+        line-height: 1.5;
+    }
+    .btn {
+        background-color: #1cdf78;
+        border: none;
+        padding: 10px 20px;
+        color: #fff;
+        text-align: center;
+        text-decoration: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    .btn:hover {
+        background-color: #17a661;
+    }
+    .btn-primary {
+        background-color: #007bff;
+        border: none;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+</style>
+
+<!-- Include html2pdf.js library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+
+<script>
+    document.getElementById('download-pdf').addEventListener('click', function () {
+        const element = document.getElementById('profile-card');
+        const fileName = '{{ user.first_name }}'; // Fetch user's first name
+        
+        // Remove buttons before generating PDF
+        element.querySelector('.btn-secondary').style.display = 'none';
+        element.querySelector('.btn-primary').style.display = 'none';
+        
+        html2pdf(element, {
+            margin: 1,
+            filename: fileName + '.pdf', // Set filename to user's first name
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+            onAfterPdfGenerated: function () {
+                // Restore buttons after PDF generation
+                element.querySelector('.btn-secondary').style.display = 'inline-block';
+                element.querySelector('.btn-primary').style.display = 'inline-block';
+            }
+        });
+    });
+</script>
+{% endblock %}
