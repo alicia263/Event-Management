@@ -1,5 +1,4 @@
 name: Django CI/CD
-
 on:
   push:
     branches:
@@ -8,20 +7,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          node-version: '20'
 
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: 3.x
-          architecture: x64
-          token: ${{secrets.GITHUB_TOKEN}}
-          cache-dependency-path: ./path/to/dependencies
 
       - name: Install dependencies
         run: |
@@ -29,7 +22,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Deploy to EC2
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v0.1.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
