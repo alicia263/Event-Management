@@ -44,7 +44,7 @@ def create_event(request):
             event = form.save(commit=False)
             event.created_by = request.user
             event.save()
-            return redirect('event_list')  # Redirect to event list after event creation
+            return redirect('event_list')  # Redirect to event list after event creation.
     else:
         form = EventForm()
     return render(request, 'create_event.html', {'form': form})
